@@ -82,6 +82,8 @@ session_start() {
     docker run -d --name "$container" --network host \
         --entrypoint="" ${IMAGE} sleep infinity >/dev/null
     
+    docker exec "$container" mkdir -p "$CONTAINER_OUTPUT"
+    
     local current_time=$(now_ts)
     local data=$(load_sessions)
     data=$(echo "$data" | jq ".sessions[\"$id\"] = {\"container\": \"$container\", \"created\": $current_time, \"last_activity\": $current_time}")
@@ -184,6 +186,7 @@ handle_file_output() {
     done
     
     local container=$(get_container "$session_id")
+    docker exec "$container" mkdir -p "$CONTAINER_OUTPUT"
     docker exec "$container" npx -y @playwright/cli@latest "$cmd" "${cli_args[@]}" 2>&1
     
     if [ -n "$container_file" ] && [ -n "$host_file" ]; then
