@@ -49,7 +49,7 @@ bash scripts/pw.sh -s <id1> click e1   # Execute in specific session
 
 ## Notes
 
-- Sessions timeout after 10 minutes of inactivity
+- Sessions timeout after 30 minutes of inactivity
 - Container uses `--network host`, so `localhost` works directly
 
 ## Reference

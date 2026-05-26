@@ -4,7 +4,7 @@
 IMAGE="mcr.microsoft.com/playwright/mcp"
 CONTAINER_OUTPUT="/tmp/playwright-output"
 SESSIONS_FILE="/tmp/playwright-sessions-$(id -u).json"
-TIMEOUT=600  # 10 minutes
+TIMEOUT=1800  # 30 minutes
 
 # Generate random session ID
 generate_id() {
@@ -71,6 +71,25 @@ get_container() {
 get_current() {
     local data=$(load_sessions)
     echo "$data" | jq -r '.current // empty'
+}
+
+check_alive() {
+    local id="$1"
+    local container=$(get_container "$id")
+    if [ -z "$container" ]; then
+        echo "Session expired. Run '$0 session start' first" >&2
+        exit 1
+    fi
+    if ! docker inspect "$container" >/dev/null 2>&1; then
+        local data=$(load_sessions)
+        data=$(echo "$data" | jq "del(.sessions[\"$id\"])")
+        if [ "$(echo "$data" | jq -r '.current')" = "$id" ]; then
+            data=$(echo "$data" | jq '.current = null')
+        fi
+        save_sessions "$data"
+        echo "Session expired. Run '$0 session start' first" >&2
+        exit 1
+    fi
 }
 
 # Session management
@@ -155,6 +174,7 @@ copy_file() {
 # Execute command with file output handling
 handle_file_output() {
     local session_id="$1"
+    check_alive "$session_id"
     local cmd="$2"
     shift 2
     local args=("$@")
@@ -199,6 +219,7 @@ handle_file_output() {
 # Execute regular command
 exec_cmd() {
     local session_id="$1"
+    check_alive "$session_id"
     shift
     local container=$(get_container "$session_id")
     
@@ -234,11 +255,6 @@ case "$1" in
     -s)
         session_id="$2"
         shift 2
-        container=$(get_container "$session_id")
-        if [ -z "$container" ]; then
-            echo "Session $session_id not found"
-            exit 1
-        fi
         case "$1" in
             screenshot|pdf|snapshot|state-save)
                 cmd="$1"
