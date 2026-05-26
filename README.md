@@ -9,6 +9,7 @@ A collection of specialized skills for AI coding assistants (OpenCode, Claude Co
 | **playwright** | Web testing and browser automation using Playwright CLI with Docker. Capture screenshots, interact with pages, verify UI behavior. |
 | **jenkins** | Manage Jenkins jobs, builds, and nodes via REST API. Trigger builds, check status, view logs, manage queue and nodes. |
 | **douyin-video** | Download Douyin (TikTok) videos without watermark and extract speech-to-text captions automatically. |
+| **springboot-migration** | Guide Spring Boot version migration with automated scanning, dependency updates, property changes, and verification checklists. |
 
 ## Directory Structure
 
