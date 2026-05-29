@@ -6,10 +6,10 @@ A collection of specialized skills for AI coding assistants (OpenCode, Claude Co
 
 | Skill | Description |
 |-------|-------------|
-| **playwright** | Web testing and browser automation using Playwright CLI with Docker. Capture screenshots, interact with pages, verify UI behavior. |
-| **jenkins** | Manage Jenkins jobs, builds, and nodes via REST API. Trigger builds, check status, view logs, manage queue and nodes. |
-| **douyin-video** | Download Douyin (TikTok) videos without watermark and extract speech-to-text captions automatically. |
-| **springboot-migration** | Guide Spring Boot version migration with automated scanning, dependency updates, property changes, and verification checklists. |
+| **playwright** | Web testing and browser automation using Playwright CLI with Docker. Session-based container architecture with multi-session support for parallel browser instances. Supports screenshots, page interaction, UI verification. Sessions timeout after 30 minutes of inactivity. |
+| **jenkins** | Manage Jenkins jobs, builds, and nodes via REST API (HTTP Basic Auth). Trigger builds (with/without params), check status, view logs, manage build queue, monitor agent nodes. Includes auto crumb resolution and wait-for-build polling. |
+| **douyin-video** | Download Douyin (TikTok) videos without watermark and extract speech-to-text captions via SiliconFlow SenseFlow API. Auto-saves each video's transcript to organized directories. No API key needed for downloads; API key required for transcription. |
+| **springboot-migration** | Spring Boot 2.x to 3.x migration guide and automated scanner. Two modes: `migrate` guides a full migration (JDK 17, javax→jakarta, dependency upgrades, Security 6.0, config property changes); `check` scans a project to detect migration gaps (residual javax imports, deprecated APIs, outdated dependencies). |
 
 ## Directory Structure
 
