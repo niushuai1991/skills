@@ -10,6 +10,7 @@
 | **jenkins** | 通过 REST API（HTTP Basic Auth）管理 Jenkins 任务、构建和节点。支持触发构建（带/不带参数）、查看状态与日志、管理构建队列、监控 Agent 节点。内置 CSRF crumb 自动获取和构建轮询等待。 |
 | **douyin-video** | 抖音无水印视频下载与硅基流动 SenseVoice API 语音转文字。自动将每个视频的文案保存到以视频 ID 命名的独立目录。下载无需 API 密钥，语音转文字需要配置 API_KEY 环境变量。 |
 | **springboot-migration** | Spring Boot 2.x → 3.x 迁移指南与自动化扫描工具。两种模式：`migrate` 引导完整迁移流程（JDK 17、javax→jakarta、依赖升级、Security 6.0、配置属性变更）；`check` 自动扫描项目检测迁移遗漏项（残留 javax import、废弃 API、过时依赖坐标）。 |
+| **bilibili-downloader** | Bilibili 视频下载（vendored 自 958877748/skills）。分别下载视频流和音频流，含纯音频变体。公开视频无需登录/cookie。 |
 
 ## 目录结构
 

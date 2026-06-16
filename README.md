@@ -10,6 +10,7 @@ A collection of specialized skills for AI coding assistants (OpenCode, Claude Co
 | **jenkins** | Manage Jenkins jobs, builds, and nodes via REST API (HTTP Basic Auth). Trigger builds (with/without params), check status, view logs, manage build queue, monitor agent nodes. Includes auto crumb resolution and wait-for-build polling. |
 | **douyin-video** | Download Douyin (TikTok) videos without watermark and extract speech-to-text captions via SiliconFlow SenseFlow API. Auto-saves each video's transcript to organized directories. No API key needed for downloads; API key required for transcription. |
 | **springboot-migration** | Spring Boot 2.x to 3.x migration guide and automated scanner. Two modes: `migrate` guides a full migration (JDK 17, javax→jakarta, dependency upgrades, Security 6.0, config property changes); `check` scans a project to detect migration gaps (residual javax imports, deprecated APIs, outdated dependencies). |
+| **bilibili-downloader** | Bilibili video/audio downloader (vendored from 958877748/skills). Separate video and audio streams; audio-only variant included. No login/cookie needed for public videos. |
 
 ## Directory Structure
 
