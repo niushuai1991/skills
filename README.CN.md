@@ -11,6 +11,7 @@
 | **douyin-video** | 抖音无水印视频下载与硅基流动 SenseVoice API 语音转文字。自动将每个视频的文案保存到以视频 ID 命名的独立目录。下载无需 API 密钥，语音转文字需要配置 API_KEY 环境变量。 |
 | **springboot-migration** | Spring Boot 2.x → 3.x 迁移指南与自动化扫描工具。两种模式：`migrate` 引导完整迁移流程（JDK 17、javax→jakarta、依赖升级、Security 6.0、配置属性变更）；`check` 自动扫描项目检测迁移遗漏项（残留 javax import、废弃 API、过时依赖坐标）。 |
 | **bilibili-downloader** | Bilibili 视频下载。分别下载视频流和音频流，含纯音频变体。公开视频无需登录/cookie。 |
+| **writing-unit-tests** | 编写干净、隔离的单元测试的参考原则。核心规则：把被测代码在自身内存之外修改的东西（HOME、环境变量、cwd、时钟、网络）重定向到一次性沙盒，确保测试不会污染宿主/开发者的真实环境。 |
 
 ## 目录结构
 

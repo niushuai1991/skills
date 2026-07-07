@@ -11,6 +11,7 @@ A collection of specialized skills for AI coding assistants (OpenCode, Claude Co
 | **douyin-video** | Download Douyin (TikTok) videos without watermark and extract speech-to-text captions via SiliconFlow SenseFlow API. Auto-saves each video's transcript to organized directories. No API key needed for downloads; API key required for transcription. |
 | **springboot-migration** | Spring Boot 2.x to 3.x migration guide and automated scanner. Two modes: `migrate` guides a full migration (JDK 17, javax→jakarta, dependency upgrades, Security 6.0, config property changes); `check` scans a project to detect migration gaps (residual javax imports, deprecated APIs, outdated dependencies). |
 | **bilibili-downloader** | Bilibili video/audio downloader. Separate video and audio streams; audio-only variant included. No login/cookie needed for public videos. |
+| **writing-unit-tests** | Reference principles for writing clean, isolated unit tests. Headline rule: isolate anything the code under test mutates outside its own memory (HOME, env, cwd, clock, network) by redirecting it to a throwaway sandbox, so tests never clobber host/developer state. |
 
 ## Directory Structure
 
