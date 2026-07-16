@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Index"
+  short_description: "Maintain spec indexes and spec docs"
+  default_prompt: "Use $spec-index to create or refresh a repository spec-index.md and keep related spec documents aligned."
