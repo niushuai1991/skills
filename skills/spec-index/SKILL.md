@@ -1,13 +1,13 @@
 ---
 name: spec-index
-description: Create, refresh, and maintain repository spec-index.md files and related specification documents, including design specs, plans, implementation notes, statuses, links, and replacement relationships. Use when Codex is asked to create or update spec-index.md, maintain spec docs, catalog docs/superpowers/specs/ files, summarize spec status, add new specs to an index, or build quick navigation for project specification documents.
+description: Create, refresh, and maintain repository spec-index.md files and related specification documents, including design specs, plans, implementation notes, statuses, links, replacement relationships, and deletion of old or superseded specs. Use when Codex is asked to create or update spec-index.md, maintain spec docs, prune outdated docs, catalog docs/superpowers/specs/ files, summarize spec status, add new specs to an index, or build quick navigation for project specification documents.
 ---
 
 # Spec Index
 
 ## Overview
 
-Create and maintain concise `spec-index.md` files that help coding agents and maintainers find the right spec before editing code. Keep the index, spec metadata, links, and relationships aligned with repository evidence; do not invent architecture, status, dates, or relationships that are not supported by the files.
+Create and maintain concise `spec-index.md` files that help coding agents and maintainers find the right spec before editing code. Keep the index, spec metadata, links, and relationships aligned with repository evidence; delete old or superseded spec files instead of preserving stale copies. Do not invent architecture, status, dates, or relationships that are not supported by the files.
 
 ## Workflow
 
@@ -18,11 +18,11 @@ Create and maintain concise `spec-index.md` files that help coding agents and ma
 
 2. Inventory every spec.
    - Sort dated specs by date and then filename, and numbered specs by number.
-   - Read enough of each spec to extract title, date, status, scope, related docs, replacement history, and implementation references.
+   - Read enough of each spec to extract title, date, status, scope, related docs, replacement notes, and implementation references.
    - Use filename dates only when the document itself lacks an explicit date.
 
 3. Choose the index shape from the evidence.
-   - For a small historical design set, use sections like `Spec 文档`, `关系说明`, `关联实现文档`, and `约定`.
+   - For a small design set, use sections like `Spec 文档`, `关系说明`, `关联实现文档`, and `约定`.
    - For a larger project/domain spec set, use sections like `Spec 文档目录`, `快速导航`, `按修改场景`, `按组件查找`, `项目核心流程`, and `关键架构决策` only when the source docs clearly support them.
    - Keep the index compact. Prefer tables and short bullets over long summaries.
 
@@ -31,21 +31,22 @@ Create and maintain concise `spec-index.md` files that help coding agents and ma
    - Links to files outside the index directory must use correct relative paths such as `../docker-images/...`.
    - Use code formatting for paths that do not have a useful Markdown target.
 
-5. Preserve useful existing content when refreshing.
+5. Refresh content and prune old specs.
    - Keep custom sections that remain accurate.
    - Update stale summaries, statuses, ordering, and links.
-   - Add new specs without deleting historical specs unless the user explicitly asks.
+   - Delete old, duplicate, or superseded spec files when replacement evidence is clear or the user asks for old specs to be removed.
+   - Remove index entries and links for deleted specs; mention replacement notes in the surviving spec or index only when useful.
 
 6. Maintain related spec docs when requested.
    - When adding or revising a spec, keep its title, date, status, related docs, and replacement notes consistent with the index.
-   - When a spec supersedes another, update both the new spec and the index so the historical relationship is explicit.
+   - When a spec supersedes another, keep the new spec and index current, then delete the superseded spec file unless the user explicitly asks to retain it.
    - When implementation docs move or are renamed, update spec cross-references and index links together.
 
 ## Content Rules
 
 - Use the language already dominant in the docs; for Chinese repos, use Chinese headings like `Spec 文档索引`.
 - Include one-line summaries grounded in the spec content.
-- Mark superseded specs as historical instead of removing them.
+- Do not keep old specs merely for history; delete superseded files and keep only concise replacement notes where they help navigation.
 - Include relationship diagrams only when they clarify replacement, dependency, or deployment relationships.
 - Avoid adding speculative architecture, unverified component ownership, or generated line counts.
 - If important metadata is missing, either omit that column or write a neutral value such as `未标注`; do not fabricate.
@@ -54,6 +55,7 @@ Create and maintain concise `spec-index.md` files that help coding agents and ma
 
 Before finishing:
 - Confirm every spec source file is represented or intentionally excluded.
+- Confirm old, duplicate, or superseded spec files are deleted unless there is a clear reason to retain them.
 - Check that all Markdown links are relative to the index file location.
 - Re-read the final index for stale copied text from another repository.
 - When practical, run a link/path check with shell tests or `rg --files` against each linked local path.
