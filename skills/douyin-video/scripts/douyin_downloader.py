@@ -82,8 +82,13 @@ class DouyinProcessor:
         if hasattr(self, 'temp_dir') and self.temp_dir.exists():
             shutil.rmtree(self.temp_dir, ignore_errors=True)
 
-    def parse_share_url(self, share_text: str) -> dict:
-        """从分享文本中提取无水印视频链接"""
+    def parse_share_url(self, share_text: str, ratio: str = "default") -> dict:
+        """从分享文本中提取无水印视频链接
+
+        ratio: 清晰度档位, 控制返回哪个画质源
+            default = 最高画质原片(常为 4K HEVC 60fps, 体积最大, 默认)
+            1080p / 720p / 540p = 对应分辨率 H.264 省流版
+        """
         # 提取分享链接
         urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', share_text)
         if not urls:
@@ -131,7 +136,15 @@ class DouyinProcessor:
         else:
             video_url = video["play_addr"]["url_list"][0]
 
-        video_url = video_url.replace("playwm", "play").replace("ratio=720p", "ratio=1080p")
+        # 去水印: playwm(带水印) -> play(无水印)
+        video_url = video_url.replace("playwm", "play")
+        # 设置清晰度: 服务器按 ratio 参数返回对应画质源
+        if re.search(r'ratio=\w+', video_url):
+            video_url = re.sub(r'ratio=\w+', f'ratio={ratio}', video_url)
+        elif '?' in video_url:
+            video_url += f'&ratio={ratio}'
+        else:
+            video_url += f'?ratio={ratio}'
         desc = data.get("desc", "").strip()
         if desc:
             desc = re.sub(r'[^a-zA-Z0-9\u4e00-\u9fff]', '_', desc)
@@ -341,22 +354,79 @@ class DouyinProcessor:
             if file_path.exists():
                 file_path.unlink()
 
+    def _head_size(self, url: str) -> int:
+        """查询视频体积(字节), HEAD 请求不下载 body; 失败回退 GET stream"""
+        try:
+            r = requests.head(url, headers=HEADERS, timeout=20, allow_redirects=True)
+            cl = r.headers.get("content-length")
+            if cl and cl.isdigit():
+                return int(cl)
+        except Exception:
+            pass
+        try:
+            r = requests.get(url, headers=HEADERS, stream=True, timeout=20)
+            cl = r.headers.get("content-length", "0")
+            r.close()
+            return int(cl) if cl.isdigit() else 0
+        except Exception:
+            return 0
 
-def get_video_info(share_link: str) -> dict:
-    """获取视频信息和下载链接"""
+    def probe_sizes(self, share_text: str, ratios: Optional[list] = None) -> list:
+        """探测各清晰度规格的视频体积(不下载视频)
+
+        按 ratios 顺序(默认 default/4k/2k/1080p/720p/540p)对每个规格发 HEAD
+        请求取 content-length。体积与更低档相同时, 较高者为回落(无独立源)。
+        返回 [{"ratio":..., "size":..., "fallback": str}, ...]; fallback 非空表示回落到该档
+        """
+        if ratios is None:
+            ratios = ["default", "4k", "2k", "1080p", "720p", "540p"]
+        info = self.parse_share_url(share_text, ratio="default")
+        base_url = info["url"]
+        sizes = []
+        for ratio in ratios:
+            url = re.sub(r'ratio=\w+', f'ratio={ratio}', base_url)
+            sizes.append({"ratio": ratio, "size": self._head_size(url)})
+        # 标注回落: 若某档体积与更低档(顺序在后)相同, 则该档为回落
+        for i, row in enumerate(sizes):
+            row["fallback"] = ""
+            if row["size"] > 0:
+                for j in range(i + 1, len(sizes)):
+                    if sizes[j]["size"] == row["size"]:
+                        row["fallback"] = sizes[j]["ratio"]
+                        break
+        return sizes
+
+
+def get_video_info(share_link: str, ratio: str = "default") -> dict:
+    """获取视频信息和下载链接
+
+    ratio: 清晰度档位, 默认 "default"(最高画质原片); 可选 "1080p"/"720p"/"540p"
+    """
     processor = DouyinProcessor()
-    return processor.parse_share_url(share_link)
+    return processor.parse_share_url(share_link, ratio=ratio)
 
 
-def download_video(share_link: str, output_dir: str = ".") -> Path:
-    """下载视频到指定目录"""
+def download_video(share_link: str, output_dir: str = ".", ratio: str = "default") -> Path:
+    """下载视频到指定目录
+
+    ratio: 清晰度档位, 默认 "default"(最高画质原片); 可选 "1080p"/"720p"/"540p"
+    """
     processor = DouyinProcessor()
-    video_info = processor.parse_share_url(share_link)
+    video_info = processor.parse_share_url(share_link, ratio=ratio)
     return processor.download_video(video_info, Path(output_dir))
 
 
+def probe_sizes(share_link: str, ratios: Optional[list] = None) -> list:
+    """探测各清晰度规格的视频体积(不下载视频)
+
+    默认按 default/4k/2k/1080p/720p/540p 顺序, 返回每档体积及回落标注
+    """
+    processor = DouyinProcessor()
+    return processor.probe_sizes(share_link, ratios=ratios)
+
+
 def extract_text(share_link: str, api_key: Optional[str] = None, output_dir: Optional[str] = None,
-                 save_video: bool = False, show_progress: bool = True) -> dict:
+                 save_video: bool = False, show_progress: bool = True, ratio: str = "default") -> dict:
     """
     从视频中提取文案并保存到文件
 
@@ -371,7 +441,7 @@ def extract_text(share_link: str, api_key: Optional[str] = None, output_dir: Opt
 
     if show_progress:
         print("正在解析抖音分享链接...")
-    video_info = processor.parse_share_url(share_link)
+    video_info = processor.parse_share_url(share_link, ratio=ratio)
 
     if show_progress:
         print("正在下载视频...")
@@ -454,10 +524,12 @@ def main():
     )
 
     parser.add_argument("--link", "-l", required=True, help="抖音分享链接或包含链接的文本")
-    parser.add_argument("--action", "-a", choices=["info", "download", "extract"],
-                        default="info", help="操作类型: info(获取信息), download(下载视频), extract(提取文案)")
+    parser.add_argument("--action", "-a", choices=["info", "download", "extract", "sizes"],
+                        default="info", help="操作类型: info(获取信息), download(下载视频), extract(提取文案), sizes(探测各规格体积, 不下载)")
     parser.add_argument("--output", "-o", default="./output", help="输出目录 (默认 ./output)")
     parser.add_argument("--api-key", "-k", help="硅基流动 API 密钥 (也可通过 DOUYIN_API_KEY 环境变量设置)")
+    parser.add_argument("--ratio", default="default",
+                        help="清晰度档位, 默认 default(最高画质原片, 常为 4K HEVC); 可选 1080p/720p/540p(省流)")
     parser.add_argument("--save-video", "-v", action="store_true", help="提取文案时同时保存视频")
     parser.add_argument("--quiet", "-q", action="store_true", help="安静模式，减少输出")
 
@@ -465,7 +537,7 @@ def main():
 
     try:
         if args.action == "info":
-            info = get_video_info(args.link)
+            info = get_video_info(args.link, ratio=args.ratio)
             print("\n" + "=" * 50)
             print("视频信息:")
             print("=" * 50)
@@ -475,7 +547,7 @@ def main():
             print("=" * 50)
 
         elif args.action == "download":
-            video_path = download_video(args.link, args.output)
+            video_path = download_video(args.link, args.output, ratio=args.ratio)
             print(f"\n视频已保存到: {video_path}")
 
         elif args.action == "extract":
@@ -484,7 +556,8 @@ def main():
                 args.api_key,
                 output_dir=args.output,
                 save_video=args.save_video,
-                show_progress=not args.quiet
+                show_progress=not args.quiet,
+                ratio=args.ratio
             )
 
             if not args.quiet:
@@ -499,6 +572,25 @@ def main():
                 print("\n文案内容:\n")
                 print(result['text'][:500] + "..." if len(result['text']) > 500 else result['text'])
                 print("\n" + "=" * 50)
+
+        elif args.action == "sizes":
+            rows = probe_sizes(args.link)
+            print("\n" + "=" * 54)
+            print("各清晰度规格体积 (HEAD 探测, 不下载视频)")
+            print("=" * 54)
+            max_size = max((r["size"] for r in rows), default=0)
+            for r in rows:
+                mb = r["size"] / 1048576
+                if r["fallback"]:
+                    tag = "  <-- 回落到 " + r["fallback"]
+                elif r["size"] == max_size and r["size"] > 0:
+                    tag = "  <-- 最大, 默认下载"
+                else:
+                    tag = ""
+                print(f"  {r['ratio'].ljust(8)} {r['size']:>10d} B  ({mb:>6.2f} MB){tag}")
+            unique = len(set(r["size"] for r in rows if r["size"] > 0))
+            print("=" * 54)
+            print(f"真实存在的独立规格: {unique} 档")
 
     except Exception as e:
         print(f"\n错误: {e}", file=sys.stderr)
