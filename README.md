@@ -12,6 +12,7 @@ A collection of specialized skills for AI coding assistants (OpenCode, Claude Co
 | **springboot-migration** | Spring Boot 2.x to 3.x migration guide and automated scanner. Two modes: `migrate` guides a full migration (JDK 17, javax→jakarta, dependency upgrades, Security 6.0, config property changes); `check` scans a project to detect migration gaps (residual javax imports, deprecated APIs, outdated dependencies). |
 | **bilibili-downloader** | Bilibili video/audio downloader. Separate video and audio streams; audio-only variant included. No login/cookie needed for public videos. |
 | **writing-unit-tests** | Reference principles for writing clean, isolated unit tests. Headline rule: isolate anything the code under test mutates outside its own memory (HOME, env, cwd, clock, network) by redirecting it to a throwaway sandbox, so tests never clobber host/developer state. |
+| **writing-event-report** | Generate structured Markdown reports for operational events: incidents, outages, deployments, configuration changes, maintenance, security events, postmortems, RCA requests, and event records. Includes report templates, examples, schemas, eval prompts, and a grading rubric. |
 
 ## Directory Structure
 
@@ -20,8 +21,12 @@ Each skill follows a standard layout:
 ```
 skills/<skill-name>/
 ├── SKILL.md              # Skill definition and instructions
-├── scripts/              # Executable scripts
-└── references/           # Reference documentation
+├── scripts/              # Executable scripts (optional)
+├── references/           # Reference documentation (optional)
+├── templates/            # Reusable output templates (optional)
+├── examples/             # Completed examples (optional)
+├── evals/                # Evaluation prompts or fixtures (optional)
+└── agents/               # Supporting agent prompts or rubrics (optional)
 ```
 
 ## Usage

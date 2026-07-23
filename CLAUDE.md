@@ -13,8 +13,12 @@ Scripts here are invoked individually by the assistant (or user) at runtime, eac
 ```
 skills/<skill-name>/
 ├── SKILL.md          # Entry point + routing trigger
-├── scripts/          # Standalone executables (bash / python3 / node .cjs)
-└── references/       # Deep-detail docs, loaded on demand
+├── scripts/          # Standalone executables, optional
+├── references/       # Deep-detail docs, optional
+├── templates/        # Reusable output templates, optional
+├── examples/         # Completed examples, optional
+├── evals/            # Evaluation prompts or fixtures, optional
+└── agents/           # Supporting agent prompts or rubrics, optional
 ```
 
 Three conventions that only become visible by reading multiple `SKILL.md` files:

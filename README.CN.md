@@ -12,6 +12,7 @@
 | **springboot-migration** | Spring Boot 2.x → 3.x 迁移指南与自动化扫描工具。两种模式：`migrate` 引导完整迁移流程（JDK 17、javax→jakarta、依赖升级、Security 6.0、配置属性变更）；`check` 自动扫描项目检测迁移遗漏项（残留 javax import、废弃 API、过时依赖坐标）。 |
 | **bilibili-downloader** | Bilibili 视频下载。分别下载视频流和音频流，含纯音频变体。公开视频无需登录/cookie。 |
 | **writing-unit-tests** | 编写干净、隔离的单元测试的参考原则。核心规则：把被测代码在自身内存之外修改的东西（HOME、环境变量、cwd、时钟、网络）重定向到一次性沙盒，确保测试不会污染宿主/开发者的真实环境。 |
+| **writing-event-report** | 生成结构化 Markdown 运维事件报告，适用于故障、宕机、部署、配置变更、日常维护、安全事件、复盘、RCA 请求和事件记录。包含报告模板、示例、结构定义、评估提示和评分规则。 |
 
 ## 目录结构
 
@@ -20,8 +21,12 @@
 ```
 skills/<skill-name>/
 ├── SKILL.md              # 技能定义和指令
-├── scripts/              # 可执行脚本
-└── references/           # 参考文档
+├── scripts/              # 可执行脚本（可选）
+├── references/           # 参考文档（可选）
+├── templates/            # 可复用输出模板（可选）
+├── examples/             # 完整示例（可选）
+├── evals/                # 评估提示或样例（可选）
+└── agents/               # 辅助 Agent 提示或评分规则（可选）
 ```
 
 ## 使用方式
