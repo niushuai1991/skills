@@ -26,7 +26,9 @@ import os
 import re
 import sys
 import json
+import math
 import time
+import random
 import argparse
 import tempfile
 import shutil
@@ -58,10 +60,32 @@ check_dependencies()
 import requests
 import ffmpeg
 
-# 请求头，模拟移动端访问
+# 请求头，模拟桌面浏览器访问 (web API 校验 UA, 缺失会返回空数据)
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) EdgiOS/121.0.2277.107 Version/17.0 Mobile/15E148 Safari/604.1'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+    'Referer': 'https://www.douyin.com/',
 }
+
+
+def _gen_verify_fp() -> str:
+    """生成 s_v_web_id (verifyFp), 移植自抖音前端算法"""
+    chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+    t = len(chars)
+    ms = int(time.time() * 1000)
+    base36 = ''
+    while ms > 0:
+        base36 = chars[math.floor(ms % 36)] + base36
+        ms = math.floor(ms / 36)
+    o = [''] * 36
+    o[8] = o[13] = o[18] = o[23] = '-'
+    o[14] = '4'
+    for i in range(36):
+        if not o[i]:
+            n = int(math.floor(random.random() * t))
+            if i == 19:
+                n = (3 & n) | 8
+            o[i] = chars[n]
+    return 'verify_' + base36 + '-' + ''.join(o)
 
 # 硅基流动 API 配置
 DEFAULT_API_BASE_URL = "https://api.siliconflow.cn/v1/audio/transcriptions"
@@ -76,11 +100,38 @@ class DouyinProcessor:
         self.api_base_url = api_base_url or DEFAULT_API_BASE_URL
         self.model = model or DEFAULT_MODEL
         self.temp_dir = Path(tempfile.mkdtemp())
+        # 带 Cookie 的会话: web API 要求 ttwid+s_v_web_id+msToken 齐全, 否则返回空数据
+        self.session = requests.Session()
+        self.session.headers.update(HEADERS)
+        self._cookies_ready = False
 
     def __del__(self):
         """清理临时目录"""
         if hasattr(self, 'temp_dir') and self.temp_dir.exists():
             shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+    def _ensure_cookies(self):
+        """准备访问 web API 所需的 Cookie (仅初始化一次)"""
+        if self._cookies_ready:
+            return
+        try:
+            r = self.session.post(
+                'https://ttwid.bytedance.com/ttwid/union/register/',
+                json={'region': 'cn', 'aid': 1768, 'needFid': False,
+                      'service': 'www.ixigua.com',
+                      'migrate_info': {'ticket': '', 'source': 'node'},
+                      'cbUrlProtocol': 'https', 'union': True},
+                timeout=15)
+            ttwid = r.cookies.get('ttwid')
+            if ttwid:
+                self.session.cookies.set('ttwid', ttwid, domain='.douyin.com')
+        except Exception:
+            pass  # 获取失败时仍用本地生成的 Cookie 尝试
+        self.session.cookies.set('s_v_web_id', _gen_verify_fp(), domain='.douyin.com')
+        ms_token = ''.join(random.choices(
+            'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=116))
+        self.session.cookies.set('msToken', ms_token, domain='.douyin.com')
+        self._cookies_ready = True
 
     def parse_share_url(self, share_text: str, ratio: str = "default") -> dict:
         """从分享文本中提取无水印视频链接
@@ -95,49 +146,36 @@ class DouyinProcessor:
             raise ValueError("未找到有效的分享链接")
 
         share_url = urls[0]
-        share_response = requests.get(share_url, headers=HEADERS)
+        share_response = self.session.get(share_url, timeout=15)
         video_id = share_response.url.split("?")[0].strip("/").split("/")[-1]
-        share_url = f'https://www.iesdouyin.com/share/video/{video_id}'
 
-        # 获取视频页面内容
-        response = requests.get(share_url, headers=HEADERS)
+        # 通过 web API 获取视频详情 (分享页已不再内嵌视频数据)
+        self._ensure_cookies()
+        response = self.session.get(
+            'https://www.douyin.com/aweme/v1/web/aweme/detail/',
+            params={'aweme_id': video_id},
+            headers={'Referer': f'https://www.douyin.com/video/{video_id}'},
+            timeout=15)
         response.raise_for_status()
+        if not response.text.strip():
+            raise ValueError("接口返回空数据, 请稍后重试或检查网络")
 
-        pattern = re.compile(
-            pattern=r"window\._ROUTER_DATA\s*=\s*(.*?)</script>",
-            flags=re.DOTALL,
-        )
-        find_res = pattern.search(response.text)
+        data = (response.json().get("aweme_detail") or {})
+        if not data:
+            raise ValueError(f"未获取到视频信息 (视频ID: {video_id}, 可能已删除)")
 
-        if not find_res or not find_res.group(1):
-            raise ValueError("从HTML中解析视频信息失败")
-
-        # 解析JSON数据
-        json_data = json.loads(find_res.group(1).strip())
-        VIDEO_ID_PAGE_KEY = "video_(id)/page"
-        NOTE_ID_PAGE_KEY = "note_(id)/page"
-
-        if VIDEO_ID_PAGE_KEY in json_data["loaderData"]:
-            original_video_info = json_data["loaderData"][VIDEO_ID_PAGE_KEY]["videoInfoRes"]
-        elif NOTE_ID_PAGE_KEY in json_data["loaderData"]:
-            original_video_info = json_data["loaderData"][NOTE_ID_PAGE_KEY]["videoInfoRes"]
-        else:
-            raise Exception("无法从JSON中解析视频或图集信息")
-
-        data = original_video_info["item_list"][0]
-        video = data["video"]
-
+        video = data.get("video") or {}
         bit_rate_list = video.get("bit_rate", [])
         if bit_rate_list:
             best = max(bit_rate_list, key=lambda x: x.get("quality_type", 0))
             video_url = best["play_addr"]["url_list"][0]
         elif video.get("play_addr_h264"):
             video_url = video["play_addr_h264"]["url_list"][0]
-        else:
+        elif video.get("play_addr"):
             video_url = video["play_addr"]["url_list"][0]
+        else:
+            raise ValueError("未找到可下载的视频地址 (可能是图集作品)")
 
-        # 去水印: playwm(带水印) -> play(无水印)
-        video_url = video_url.replace("playwm", "play")
         # 设置清晰度: 服务器按 ratio 参数返回对应画质源
         if re.search(r'ratio=\w+', video_url):
             video_url = re.sub(r'ratio=\w+', f'ratio={ratio}', video_url)
