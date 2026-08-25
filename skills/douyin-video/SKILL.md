@@ -44,19 +44,19 @@ export API_KEY="your-siliconflow-api-key"
 
 ```bash
 # 获取视频信息和下载链接 (无需 API 密钥)
-python douyin_downloader.py --link "抖音分享链接" --action info
+python scripts/douyin_downloader.py --link "抖音分享链接" --action info
 
 # 下载视频到指定目录
-python douyin_downloader.py --link "抖音分享链接" --action download --output ./videos
+python scripts/douyin_downloader.py --link "抖音分享链接" --action download --output ./videos
 
 # 提取视频文案并保存到文件 (需要 API_KEY 环境变量)
-python douyin_downloader.py --link "抖音分享链接" --action extract --output ./output
+python scripts/douyin_downloader.py --link "抖音分享链接" --action extract --output ./output
 
 # 提取文案并同时保存视频
-python douyin_downloader.py --link "抖音分享链接" --action extract --output ./output --save-video
+python scripts/douyin_downloader.py --link "抖音分享链接" --action extract --output ./output --save-video
 
 # 安静模式 (减少输出)
-python douyin_downloader.py --link "抖音分享链接" --action extract --output ./output --quiet
+python scripts/douyin_downloader.py --link "抖音分享链接" --action extract --output ./output --quiet
 ```
 
 ### 输出目录结构
@@ -94,6 +94,8 @@ output/
 ### 方法二: 在 Python 代码中调用
 
 ```python
+import sys
+sys.path.insert(0, "scripts")
 from douyin_downloader import get_video_info, download_video, extract_text
 
 # 获取视频信息

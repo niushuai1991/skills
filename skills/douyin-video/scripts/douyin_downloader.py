@@ -13,13 +13,13 @@
 
 使用示例:
   # 获取下载链接 (无需 API 密钥)
-  python douyin_downloader.py --link "抖音分享链接" --action info
+  python scripts/douyin_downloader.py --link "抖音分享链接" --action info
 
   # 下载视频
-  python douyin_downloader.py --link "抖音分享链接" --action download --output ./videos
+  python scripts/douyin_downloader.py --link "抖音分享链接" --action download --output ./videos
 
   # 提取文案并保存到文件 (需要 API_KEY 环境变量)
-  python douyin_downloader.py --link "抖音分享链接" --action extract --output ./output
+  python scripts/douyin_downloader.py --link "抖音分享链接" --action extract --output ./output
 """
 
 import os
@@ -510,16 +510,16 @@ def main():
         epilog="""
 示例:
   # 获取视频信息和下载链接
-  python douyin_downloader.py --link "抖音分享链接" --action info
+  python scripts/douyin_downloader.py --link "抖音分享链接" --action info
 
   # 下载视频
-  python douyin_downloader.py --link "抖音分享链接" --action download --output ./videos
+  python scripts/douyin_downloader.py --link "抖音分享链接" --action download --output ./videos
 
   # 提取文案并保存到文件 (需要设置 DOUYIN_API_KEY 环境变量)
-  python douyin_downloader.py --link "抖音分享链接" --action extract --output ./output
+  python scripts/douyin_downloader.py --link "抖音分享链接" --action extract --output ./output
 
   # 提取文案并同时保存视频
-  python douyin_downloader.py --link "抖音分享链接" --action extract --output ./output --save-video
+  python scripts/douyin_downloader.py --link "抖音分享链接" --action extract --output ./output --save-video
         """
     )
 
