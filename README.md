@@ -13,6 +13,7 @@ A collection of specialized skills for AI coding assistants (OpenCode, Claude Co
 | **bilibili-downloader** | Bilibili video/audio downloader. Separate video and audio streams; audio-only variant included. No login/cookie needed for public videos. |
 | **writing-unit-tests** | Reference principles for writing clean, isolated unit tests. Headline rule: isolate anything the code under test mutates outside its own memory (HOME, env, cwd, clock, network) by redirecting it to a throwaway sandbox, so tests never clobber host/developer state. |
 | **writing-event-report** | Generate structured Markdown reports for operational events: incidents, outages, deployments, configuration changes, maintenance, security events, postmortems, RCA requests, and event records. Includes report templates, examples, schemas, eval prompts, and a grading rubric. |
+| **web-to-pdf** | Turn webpages or supplied text into polished Chinese PDFs with a cover, clickable table of contents, illustrations, and quality checks. |
 
 ## Directory Structure
 
