@@ -1,10 +1,8 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+# Skills
 
 ## What this repository is
 
-A **catalog of skills** for AI coding assistants (Claude Code, OpenCode). It is not an application: there is **no build system, package manager, test suite, or linter**. Each skill is a self-contained folder of instructions plus standalone scripts — the assistant loads a skill's `SKILL.md` when a matching task is detected. Do not look for or add a build/test pipeline.
+A **catalog of skills** for AI coding assistants (Claude Code, Codex). It is not an application: there is **no build system, package manager, test suite, or linter**. Each skill is a self-contained folder of instructions plus standalone scripts — the assistant loads a skill's `SKILL.md` when a matching task is detected. Do not look for or add a build/test pipeline.
 
 Scripts here are invoked individually by the assistant (or user) at runtime, each from within its own skill directory. There are no shared libraries between skills.
 
